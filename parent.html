@@ -1,0 +1,89 @@
+<html>
+<head>
+  <script src="jschannel/src/jschannel.js"></script></head>
+  <script src="jquery.js"></script></head>
+
+<style type="text/css" media="screen">
+iframe {
+  display: none;
+}
+
+#timing_output {
+  border: 2px solid red;
+  min-height: 100px;
+  font-family: Courier New;
+  white-space: pre;
+  font-size: .8em;
+  max-height: 200px;
+  overflow: auto;  
+}
+</style>
+
+<body>
+  <p>
+    Hi!  This tests postmessage performance.  Specify how big a chunk you wanna send,
+    how many times you wanna send it, and click "go":
+  </p>
+  <p>
+    Chunk size in kb: <input id="chunk_size" type="text" value="100"></input><br>
+    Number of chunks <input id="num_chunks" type="text" value="10"></input><br>
+    <button id="go">go</button>
+  </p>
+  <div id="timing_output">(timing output will go here!)</div>
+<iframe id="childId" src="child.html"></iframe>
+</body>
+<script>
+var chan = Channel.build({
+    window: document.getElementById("childId").contentWindow,
+    origin: "*",
+    scope: "testScope"
+});
+
+function logit(x) {
+    $("#timing_output").append(x);
+}
+
+sfBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+"
+
+$(document).ready(function() {
+    $("button").click(function() {
+        var chunkSz = parseInt($("#chunk_size").val());
+        var numChunks = parseInt($("#num_chunks").val());
+        $("#timing_output").empty();
+        logit("starting test with " + numChunks + " "+ chunkSz + "k chunks\n");
+
+        var iters = 0;
+        var data = "";
+        for (var i = 0; i < (16 * chunkSz); i++) data += sfBytes;
+
+        var totalMS = 0;
+        var totalKB = 0;
+
+        function runIter() {
+            var startTime = new Date();
+            chan.call({
+                method: "send",
+                params: data,
+                success: function(v) {
+                    var elapsed = new Date() - startTime;
+                    logit("sent: " + (v / 1024)+ "kb in " + elapsed + "ms\n");
+                    totalKB += (v / 1024);
+                    totalMS += elapsed;
+                    // use set timeout to keep stack size reasonable
+                    if (++iters < numChunks) runIter();
+                    else logit(totalKB + "kb sent in " + totalMS + "ms --  " + (totalKB / (totalMS / 1000.0)) + "kb/s");
+                }
+            });
+        };
+
+        runIter();
+
+        return true;
+    });
+
+});
+
+</script>
+</html>
+
+
