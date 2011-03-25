@@ -1,0 +1,3 @@
+this is a simple application to get a rough idea of how postmessage
+performs when you send LOTS OF DATA through it.
+
