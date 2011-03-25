@@ -8,3 +8,12 @@ performs when you send LOTS OF DATA through it.
 3. git submodule update
 4. open pmtest.html in your favorite browser
 
+## Some sample performance numbers:
+
+To send a gigabyte of data between two frames via postMessage on my 
+macbook pro:
+
+  * Firefox 4: 39.5s
+  * Chrome 10: 55.8s
+  * Safari 5:  15.3s
+
